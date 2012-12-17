@@ -1,7 +1,7 @@
 <?php
 
 class DES
-{	
+{
     protected static $IP = array(
         58,50,42,34,26,18,10,2,
         60,52,44,36,28,20,12,4,
@@ -126,213 +126,187 @@ class DES
         46,42,50,36,29,32
     );
 
-    protected static $LLS = array(0,1,1,2,2,2,2,2,2,1,2,2,2,2,2,2,1);
+    protected static $LLS = array(0, 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1);
 
     protected static $Ki = array();
 
-protected static function Init_bit_tab(&$dest, $source, $n, $offset)
-{
+    protected static function Init_bit_tab(&$dest, $source, $n, $offset)
+    {
 
-	for($i=0;$i<$n;$i++) 
-	{
-		$masque=0x80;
-		for($j=0;$j<8;$j++) 
-		{
-			$dest[8* $i + $j + $offset] = (($source[$i] & $masque) >>(7 - $j));
-			$masque >>= 1;
-		}
-	}
-}
-
-/****************************************************************************
- Bin_to_Hex()   :
-	range la valeur hexa sur 8 octets d'un nombre binaire de 64 bits
-*****************************************************************************/
-protected static function Bin_to_Hex(&$vect,$source, $offset)
-{
-	//memset(vect,0,8);
-	for($i=0; $i <8; $i++) {
-		$masque=7;
-		for($j=0; $j<8; $j++) {
-			$vect[$i] += (self::puissance($masque)) * $source[$i * 8 + $j + $offset];
-			--$masque;
-		}
-	}
-}
-
-protected static function puissance($puissance)
-{
- 	$res = 1;
-
-	for($i=1; $i <= $puissance; $i++) 
-	$res *= 2;
-
-	return($res);
-}
-
-
-protected static function Vect_Permutation(&$vect,$n_vect,$regle,$n_regle, $offset)
-{
-	for($i =0; $i <$n_vect; $i++) {
-		$buff[$i] =$vect[$i +$offset];
-    }
-	for($i=0;$i<$n_regle;$i++) {
-		$vect[$i +$offset] =$buff[$regle[$i]-1];
-    }
-}
-
-
-protected static function S_Box_Calc(&$vect, $offset)
-{
-  $S_Box = array($S1,$S2,$S3,$S4,$S5,$S6,$S7,$S8);
-
-  for($i=0;$i<8;$i++) 
-  {
-		$col =(8*$vect[1+6*$i +$offset] +4*$vect[2+6*$i +$offset] + 2*$vect[3+6*$i +$offset] + $vect[4+6*$i +$offset]);
-		$lig =(2*$vect[6*$i +$offset] + $vect[5+6*$i +$offset]);
-		self::Init_4bit_tab($vect, $S_Box[$i][$col+$lig*16], (4 *$i +$offset));
-  }
-}
-
-
-protected static function Init_4bit_tab(&$dest,$source, $offset)
-{
-	$masque=0x08;
-	for($i=0; $i<4; $i++) 
-	{
-		$dest[$i +$offset] =(($source & $masque)>>(3-$i));
-		$masque >>= 1;
-	}
-}
-
-
-protected static function Xor(&$vect1,$vect2,$num_byte, $offset_vect1, $offset_vect2)
-{
-	for($i=0; $i<$num_byte; $i++) { 
-		$vect1[$i +$offset_vect1] ^= $vect2[$i +$offset_vect2];
-    }
-}
-
-
-protected static function Left_shifts(&$vect,$n, $offset)
-{
-	for($i=0; $i<$n; $i++) 
-	{
-		$tmp_vect0 = $vect[0 +$offset];
-		$tmp_vect28 = $vect[28 +$offset];
-		for($j =0; $j <27; $j++)
-		{
-			$vect[$j +$offset] =$vect[$j +1 +$offset];
-			$vect[$j +28 +$offset] =$vect[$j +29 +$offset];	
-		}
-		$vect[27 +$offset] = $tmp_vect0;
-		$vect[55 +$offset] = $tmp_vect28;
-	}
-}
-
-protected static function Calcul_sous_cles($DESKEY)
-{
-	self::Init_bit_tab($Kb, $DESKEY, 8, 1);                           
-	self::Vect_Permutation($Kb, 64, self::$PC1, 56, 1);
-
-	for($i=1; $i<=16; $i++) 
-	{
-		self::Left_shifts($Kb, self::$LLS[$i], 1);			
-		for($j =1; $j <57; $j++) {
-			$inter_key[$j] =$Kb[$j];
+        for ($i = 0; $i < $n; $i++) {
+            $masque = 0x80;
+            for ($j = 0; $j < 8; $j++) {
+                $dest[8 * $i + $j + $offset] = (($source[$i] & $masque) >> (7 - $j));
+                $masque >>= 1;
+            }
         }
-		self::Vect_Permutation($inter_key, 56, self::$PC2, 48, 1);
-		for($k =1; $k <49; $k++) {
-			self::$Ki[$i][$k] =$inter_key[$k];
-        }
-	}
-}
-
-
-public static function function_des($cryp_decrypt,$DES_DATA,$DESKEY,&$DES_RESULT)
-{	
-	self::Init_bit_tab($Data_B, $DES_DATA, 8, 1);
-	self::Vect_Permutation($Data_B, 64, self::$IP,64, 1);
-	
-	self::Calcul_sous_cles($DESKEY);
-	
-	/******************* boucle principale de 15 iterations */
-	for($i=1; $i<=15; $i++) 
-	{	 		
-		for($j =0; $j <32; $j++) {
-            $right32_bit[$j] =$Data_B[33 +$j];
-        }
-		self::Vect_Permutation($Data_B, 32, self::$E, 48, 33);
-		
-		switch($cryp_decrypt) {
-		case 0:
-			self::Xor($Data_B, self::$Ki[$i],48, 33, 1);
-			break;
-		
-		case 1:
-			self::Xor($Data_B, self::$Ki[17 -$i],48,33, 1);
-			break;
-		}
-		
-		self::S_Box_Calc($Data_B, 33);
-		self::Vect_Permutation($Data_B,32,self::$PP,32, 33);
-		self::Xor($Data_B, $Data_B, 32, 33, 1);
-		for($k =0; $k <32; $k++) {
-            $Data_B[$k +1] =$right32_bit[$k];
-        }
-	}
-	
-	/******************************** 16 iteration *****/
-	
-	for($l =0; $l <32; $l ++) {
-        $right32_bit[$l] =$Data_B[33 +$l];
     }
-	self::Vect_Permutation($Data_B,32,self::$E,48, 33);
-	
-	if($cryp_decrypt==0) {
-		self::Xor($Data_B, self::$Ki[16],48, 33, 1);
-    } else {
-		self::Xor($Data_B, self::$Ki[1],48, 33, 1);
+
+    /****************************************************************************
+    Bin_to_Hex()   :
+    range la valeur hexa sur 8 octets d'un nombre binaire de 64 bits
+     *****************************************************************************/
+    protected static function Bin_to_Hex(&$vect, $source, $offset)
+    {
+        //memset(vect,0,8);
+        $vect = array(0, 0, 0, 0, 0, 0, 0, 0);
+
+        for ($i = 0; $i < 8; $i++) {
+            $masque = 7;
+            for ($j = 0; $j < 8; $j++) {
+                $vect[$i] += (self::puissance($masque)) * $source[$i * 8 + $j + $offset];
+                --$masque;
+            }
+        }
     }
-	self::S_Box_Calc($Data_B, 33);
-	self::Vect_Permutation($Data_B,32,self::$PP,32,33);
-	self::Xor($Data_B, $Data_B,32, 1, 33);
-	for($j =0; $j <32; $j++) {
-		$Data_B[33 +$j] =$right32_bit[$j];
+
+    protected static function puissance($puissance)
+    {
+        $res = 1;
+
+        for ($i = 1; $i <= $puissance; $i++) {
+            $res *= 2;
+        }
+
+        return ($res);
     }
-	self::Vect_Permutation($Data_B,64,self::$IPinv,64, 1);
-	
-	self::Bin_to_Hex($DES_RESULT, $Data_B, 1);
 
-}
-/*
-void MAC(byte msg[], int length, byte key[], byte result[])
-{
-	int block;
-	
-	block=0;
-	//memset(result,0,8);
-	
-	while(length >block)
-	{
-		if((length-block) <=8)
-		{
-			Xor(result,&msg[block],(byte)(length-block));
-			function_des(0, result, key, result);
-			return;
-		}
-		Xor(result,&msg[block],8);
-		function_des(0, result, key, result);
-		block += 8;
-	}
-}*/
 
-public static function main()
-{
-	$DESKey ="abcdefgh";
-	$Data ="01234567890";
+    protected static function Vect_Permutation(&$vect, $n_vect, $regle, $n_regle, $offset)
+    {
+        $buff = array();
+        for ($i = 0; $i < $n_vect; $i++) {
+            $buff[$i] = $vect[$i + $offset];
+        }
+        for ($i = 0; $i < $n_regle; $i++) {
+            $vect[$i + $offset] = $buff[$regle[$i] - 1];
+        }
+    }
 
-	self::function_des(0, $Data, $DESKey, $Res);
-	var_dump($Res);
+
+    protected static function S_Box_Calc(&$vect, $offset)
+    {
+        $S_Box = array(self::$S1, self::$S2, self::$S3, self::$S4, self::$S5, self::$S6, self::$S7, self::$S8);
+
+        for ($i = 0; $i < 8; $i++) {
+            $col = (8 * $vect[1 + 6 * $i + $offset] + 4 * $vect[2 + 6 * $i + $offset] + 2 * $vect[3 + 6 * $i + $offset] + $vect[4 + 6 * $i + $offset]);
+            $lig = (2 * $vect[6 * $i + $offset] + $vect[5 + 6 * $i + $offset]);
+            self::Init_4bit_tab($vect, $S_Box[$i][$col + $lig * 16], (4 * $i + $offset));
+        }
+    }
+
+
+    protected static function Init_4bit_tab(&$dest, $source, $offset)
+    {
+        $masque = 0x08;
+        for ($i = 0; $i < 4; $i++) {
+            $dest[$i + $offset] = (($source & $masque) >> (3 - $i));
+            $masque >>= 1;
+        }
+    }
+
+
+    protected static function _Xor(&$vect1, $vect2, $num_byte, $offset_vect1, $offset_vect2)
+    {
+        for ($i = 0; $i < $num_byte; $i++) {
+            $vect1[$i + $offset_vect1] ^= $vect2[$i + $offset_vect2];
+        }
+    }
+
+
+    protected static function Left_shifts(&$vect, $n, $offset)
+    {
+        for ($i = 0; $i < $n; $i++) {
+            $tmp_vect0 = $vect[0 + $offset];
+            $tmp_vect28 = $vect[28 + $offset];
+            for ($j = 0; $j < 27; $j++) {
+                $vect[$j + $offset] = $vect[$j + 1 + $offset];
+                $vect[$j + 28 + $offset] = $vect[$j + 29 + $offset];
+            }
+            $vect[27 + $offset] = $tmp_vect0;
+            $vect[55 + $offset] = $tmp_vect28;
+        }
+    }
+
+    protected static function Calcul_sous_cles($DESKEY)
+    {
+        self::Init_bit_tab($Kb, $DESKEY, 8, 1);
+        self::Vect_Permutation($Kb, 64, self::$PC1, 56, 1);
+
+        for ($i = 1; $i <= 16; $i++) {
+            self::Left_shifts($Kb, self::$LLS[$i], 1);
+            for ($j = 1; $j < 57; $j++) {
+                $inter_key[$j] = $Kb[$j];
+            }
+            self::Vect_Permutation($inter_key, 56, self::$PC2, 48, 1);
+            for ($k = 1; $k < 49; $k++) {
+                self::$Ki[$i][$k] = $inter_key[$k];
+            }
+        }
+    }
+
+
+    public static function function_des($cryp_decrypt, $DES_DATA, $DESKEY, &$DES_RESULT = array())
+    {
+        $right32_bit = array();
+
+        self::Init_bit_tab($Data_B, $DES_DATA, 8, 1);
+        self::Vect_Permutation($Data_B, 64, self::$IP, 64, 1);
+
+        self::Calcul_sous_cles($DESKEY);
+
+        /******************* boucle principale de 15 iterations */
+        for ($i = 1; $i <= 15; $i++) {
+            for ($j = 0; $j < 32; $j++) {
+                $right32_bit[$j] = $Data_B[33 + $j];
+            }
+            self::Vect_Permutation($Data_B, 32, self::$E, 48, 33);
+
+            switch ($cryp_decrypt) {
+                case 0:
+                    self::_Xor($Data_B, self::$Ki[$i], 48, 33, 1);
+                    break;
+
+                case 1:
+                    self::_Xor($Data_B, self::$Ki[17 - $i], 48, 33, 1);
+                    break;
+            }
+
+            self::S_Box_Calc($Data_B, 33);
+            self::Vect_Permutation($Data_B, 32, self::$PP, 32, 33);
+            self::_Xor($Data_B, $Data_B, 32, 33, 1);
+            for ($k = 0; $k < 32; $k++) {
+                $Data_B[$k + 1] = $right32_bit[$k];
+            }
+        }
+
+        /******************************** 16 iteration *****/
+
+        for ($l = 0; $l < 32; $l++) {
+            $right32_bit[$l] = $Data_B[33 + $l];
+        }
+        self::Vect_Permutation($Data_B, 32, self::$E, 48, 33);
+
+        if ($cryp_decrypt == 0) {
+            self::_Xor($Data_B, self::$Ki[16], 48, 33, 1);
+        } else {
+            self::_Xor($Data_B, self::$Ki[1], 48, 33, 1);
+        }
+        self::S_Box_Calc($Data_B, 33);
+        self::Vect_Permutation($Data_B, 32, self::$PP, 32, 33);
+        self::_Xor($Data_B, $Data_B, 32, 1, 33);
+        for ($j = 0; $j < 32; $j++) {
+            $Data_B[33 + $j] = $right32_bit[$j];
+        }
+        self::Vect_Permutation($Data_B, 64, self::$IPinv, 64, 1);
+
+        self::Bin_to_Hex($DES_RESULT, $Data_B, 1);
+    }
 }
-}
+
+$DESKey = "abcdefgh";
+$Data = "01234567890";
+
+$Res = array();
+DES::function_des(0, $Data, $DESKey, $Res);
+var_dump($Res);
