@@ -301,4 +301,9 @@ $Data = "01234567890";
 
 $Res = array();
 DES::function_des(0, $Data, $DESKey, $Res);
-var_dump($Res);
+$des2 = mcrypt_encrypt(MCRYPT_DES, $DESKey, $Data, MCRYPT_MODE_ECB);
+$ascii = array();
+for ($i = 0; $i < strlen($des2); $i++) {
+    $ascii[] = ord($des2[$i]);
+}
+var_dump($Res, $ascii);
